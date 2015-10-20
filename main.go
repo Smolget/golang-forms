@@ -6,7 +6,13 @@ import (
     "log"
     "net/http"
     "strings"
+    "encoding/json"
 )
+
+type Person struct {
+  Name string
+  Tags []string
+}
 
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
     r.ParseForm()  //Parse url parameters passed, then parse the response packet for the POST body (request body)
@@ -20,6 +26,19 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
         fmt.Println("val:", strings.Join(v, ""))
     }
     fmt.Fprintf(w, "Hello!") // write data to response
+}
+
+func person_json(w http.ResponseWriter, r *http.Request){
+  person := Person{"Ilya", []string{"ruby", "golang", "angular"}}
+
+  js, err := json.Marshal(person)
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+
+  w.Header().Set("Content-Type", "application/json")
+  w.Write(js)
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +56,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 func main() {
     http.HandleFunc("/", sayhelloName)
     http.HandleFunc("/login", login)
+    http.HandleFunc("/person.json", person_json)
     err := http.ListenAndServe(":9898", nil)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
